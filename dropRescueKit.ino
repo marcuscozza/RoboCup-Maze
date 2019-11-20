@@ -12,7 +12,7 @@ int dropRescueKit (){  // delcaring function for droping rescue kit
 
 void setup() 
 { 
-  servo.attach(9);      // attach the signal pin of servo to pin9 of arduino
+  servo.attach(5);      // attach the signal pin of servo to pin9 of arduino
   dropRescueKit ();     //calling function to drop rescue kit
 } 
   
