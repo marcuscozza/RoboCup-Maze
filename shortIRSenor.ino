@@ -1,3 +1,9 @@
+/**
+* Author: Marcus 
+* Date: 20/11/2019
+* Aim: Testing IR sensor.
+
+**/
 #include <SharpDistSensor.h>
 
 // Analog pin to which the sensor is connected
