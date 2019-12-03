@@ -1,6 +1,7 @@
 /**
 * Author: Marcus 
-* Date: 29/11/2019
+* Date: 3/12/2019
+* Aim: Functions that will return all 5 values for ultrasonics
 port | Trig | Echo
 6    |  64  |  69
 7    |  63  |  68
@@ -12,8 +13,14 @@ port | Trig | Echo
 #include <arduino.h>
 #include <Wire.h> 
 #include <SoftwareSerial.h>
+#include "MeAuriga.h"
 
 //defines variables
+//defines Port 6
+int port6Trig=64;
+int port6Echo=69;
+int distanceTopRight;
+long durationTopRight;
 //defines Port 7
 int port7Trig=63;
 int port7Echo=68;
@@ -22,11 +29,6 @@ long durationTopLeft;
 //defines Port 8
 int port8Trig=62;
 int port8Echo=67;
-int distanceTopRight;
-long durationTopRight;
-//defines Port 9
-int port9Trig=61;
-int port9Echo=66;
 int distanceBottomLeft;
 long durationBottomLeft;
 //defines Port 10
@@ -34,9 +36,24 @@ int port10Trig=60;
 int port10Echo=65;
 int distanceBottomRight;
 long durationBottomRight;
+//Define port 9 front ultrasonic
+MeUltrasonicSensor frontUltraSensor(PORT_9);
 
 
-int getUltrasonicTopLeft(){ //Functions that returns the distance of Ultrasonics in CM for all 4 sides
+
+int getUltrasonicBottomLeft(){ //Functions that returns the distance of Ultrasonics in CM for all 4 sides
+    pinMode(port8Trig,OUTPUT);
+    pinMode(port8Echo,INPUT);
+    digitalWrite(port8Trig,LOW);
+    delayMicroseconds(2);
+    digitalWrite(port8Trig,HIGH);
+    delayMicroseconds(10);
+    digitalWrite(port8Trig,LOW);
+    durationBottomLeft=pulseIn(port8Echo,HIGH);
+    distanceBottomLeft=durationBottomLeft*0.034/2;
+    return distanceBottomLeft;
+}
+int getUltrasonicTopLeft(){ 
     pinMode(port7Trig,OUTPUT);
     pinMode(port7Echo,INPUT);
     digitalWrite(port7Trig,LOW);
@@ -50,30 +67,18 @@ int getUltrasonicTopLeft(){ //Functions that returns the distance of Ultrasonics
 }
 
 int getUltrasonicTopRight(){
-    pinMode(port8Trig,OUTPUT);
-    pinMode(port8Echo,INPUT);
-    digitalWrite(port8Trig,LOW);
+    pinMode(port6Trig,OUTPUT);
+    pinMode(port6Echo,INPUT);
+    digitalWrite(port6Trig,LOW);
     delayMicroseconds(2);
-    digitalWrite(port8Trig,HIGH);
+    digitalWrite(port6Trig,HIGH);
     delayMicroseconds(10);
-    digitalWrite(port8Trig,LOW);
-    durationTopRight=pulseIn(port8Echo,HIGH);
+    digitalWrite(port6Trig,LOW);
+    durationTopRight=pulseIn(port6Echo,HIGH);
     distanceTopRight=durationTopRight*0.034/2;
     return distanceTopRight;
 }
 
-int getUltrasonicBottomLeft(){
-    pinMode(port9Trig,OUTPUT);
-    pinMode(port9Echo,INPUT);
-    digitalWrite(port9Trig,LOW);
-    delayMicroseconds(2);
-    digitalWrite(port9Trig,HIGH);
-    delayMicroseconds(10);
-    digitalWrite(port9Trig,LOW);
-    durationBottomLeft=pulseIn(port9Echo,HIGH);
-    distanceBottomLeft=durationBottomLeft*0.034/2;
-    return distanceBottomLeft;
-}
 
 int getUltrasonicBottomRight(){
     pinMode(port10Trig,OUTPUT);
@@ -100,5 +105,7 @@ void loop() {
   Serial.println(getUltrasonicBottomLeft());
   Serial.print("BottomRight:");
   Serial.println(getUltrasonicBottomRight());
+  Serial.print("Front: ");
+  Serial.println(frontUltraSensor.distanceCm());
   delay (500);
 }

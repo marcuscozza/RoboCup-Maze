@@ -18,7 +18,7 @@ void loop() {
   }else if (!limitSwitch()){
     Serial.println("Switch is not active");
   }else{
-    Serial.println("Switch Error: Can't Read Status);
+    Serial.println("Switch Error: Can't Read Status");
   }
   delay(500);
 }

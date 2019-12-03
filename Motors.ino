@@ -2,25 +2,26 @@
 * Author: Marcus 
 * Date: 2/10/2019
 * Aim: Moves foward untill robot is 7cm from a wall it will then turn 90 degress to the right and drive foward again.
+*https://forum.makeblock.com/t/need-hint-to-get-mbot-ranger-to-move-through-libraries/8909/3
 */
 //Librays
 #include <Arduino.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
-#include <MeAuriga.h>
+#include "MeAuriga.h"
 
 //Encoder Motor Delcare
 MeEncoderOnBoard Encoder_1(SLOT1); // Declare encoder motors
 MeEncoderOnBoard Encoder_2(SLOT2);
 
 //Ultrasonic Delcare
-MeUltrasonicSensor ultraSensor(PORT_6);
+MeUltrasonicSensor frontUltraSensor(PORT_9);
 
 //Gyro Delcare
 MeGyro gyro (0,0x69); //declare onboard gyro
 
 //getAbsolute function declare
-int turnSpeed = 200; // power at which to turn
+int turnSpeed; // power at which to turn
 int absolute; //getAbsolute() vlaue from Gyro
 int target; //set target degress to int
 bool resetGyro; // set resetGyro to bool
@@ -66,10 +67,10 @@ void setup(){
 void loop(){
     Encoder_1.setMotorPwm(-100); //drive foward
     Encoder_2.setMotorPwm(100);
-    if (ultraSensor.distanceCm() <= 7){  // checks distance if less then (input), if so motors stop and the turnAbsolute function is ran
+    if (frontUltraSensor.distanceCm() <= 7){  // checks distance if less then (input), if so motors stop and the turnAbsolute function is ran
         Encoder_1.setMotorPwm(0);
         Encoder_2.setMotorPwm(0);
-        turnAbsolute(90, true);
+        turnAbsolute(90, true, 200);
         delay(1000);
     }
 }
@@ -80,7 +81,7 @@ void loop(){
  *target = int(amount of degress to turn in Z angle)
  *resetGyro = bool(True[Will reset angle z to 0 after turning] | False[will not reset angle z after turning])
 **/
-void turnAbsolute(int target, bool resetGyro){ 
+void turnAbsolute(int target, bool resetGyro, int turnSpeed){ 
   gyro.update(); //Set gyro active
   absolute = gyro.getAngleZ(); // set absolute to angle z
   Serial.println(absolute); //print angle z
