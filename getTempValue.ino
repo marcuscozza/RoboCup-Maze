@@ -2,6 +2,7 @@
 * Author: Marcus 
 * Date: 29/11/2019
 * Aim: Connect two Temp sensors
+* https://os.mbed.com/users/ronixas/code/MLX90614-IR_Temp_Sensor-change-address/file/039f25b3de3e/main.cpp/
 **/
 #include <Wire.h>
 #include <Adafruit_MLX90614.h>
