@@ -1,6 +1,6 @@
 /*
 * Author: Marcus 
-* Date: 7/10/2019
+* Date: 2/10/2019
 * Aim: PID wall follower
 * NEEDS getUltraonicValue TO READ VALUES
 *https://forum.makeblock.com/t/need-hint-to-get-mbot-ranger-to-move-through-libraries/8909/3
@@ -20,10 +20,10 @@ MeEncoderOnBoard Encoder_2(SLOT2);
 MeUltrasonicSensor frontUltraSensor(PORT_9);
 
 //PID Declare
-int desiredLength = 6;
-int speedValue = 100;
+int desiredLength = 6; //the length away from the wall
+int speedValue = 100; // speed of the motors
 
-int threshold = 5;
+int threshold = 5; // min distance
 int error = 0;
 int lastError = 0;
 int proportional = 0;
@@ -32,7 +32,7 @@ int derivative = 0;
 
 int pidValue = 0;
 
-int kP = 5.5;
+int kP = 5.5; // PID variables
 float kI = 0.01;
 float kD = 0.3;
 
@@ -71,7 +71,7 @@ void setup(){
     TCCR2B = _BV(CS21);
 }
 void loop(){
-  if (frontUltraSensor.distanceCm() <= 6){  // checks distance if less then (input), if so motors stop and the turnAbsolute function is ran
+  if (frontUltraSensor.distanceCm() <= 6){  // checks distance if less then (input), if so motors stop and program stop
         Encoder_1.setMotorPwm(0);
         Encoder_2.setMotorPwm(0);
         exit(0);
@@ -85,15 +85,15 @@ void loop(){
       derivative = error - lastError;
       lastError = error;
       pidValue = error*kP + integral*kI + derivative*kD;
-   if (pidValue > 100){
+   if (pidValue > 100){ // checks if the pidValue is too high/low and sets it to a upper/lower limit
       pidValue = 60;
    }
    else if (pidValue < -100){
       pidValue = -60;
     }
-    Encoder_1.setMotorPwm(-speedValue + pidValue);
+    Encoder_1.setMotorPwm(-speedValue + pidValue); //changes the speed of the motor
     Encoder_2.setMotorPwm(speedValue + pidValue);
-    Encoder_1.updateSpeed(); //update speed
+    Encoder_1.updateSpeed(); //update speed 
     Encoder_2.updateSpeed();
     }
 }
