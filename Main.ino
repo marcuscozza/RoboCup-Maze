@@ -1,7 +1,7 @@
 /*
 * Author: Marcus 
-* Date: 5/01/2020
-* Aim: Main Program which is using PID gyro to navigate. includes recuse and alignment
+* Date: 8/01/2020
+* Aim: Main Program which is using PID gyro to navigate. includes rescuekit and alignment
 * NEEDS Functions in order to compile
  */
 
@@ -81,8 +81,14 @@ void setup(){
     pinMode(3, INPUT); // sets pin 3 and 2 for port 2 to inputs
     pinMode(2, INPUT); 
 
+
+    //delcare temp sensor
     mlx.begin(); 
+
+    //LED delcare pin 44
     led.setpin( 44 );
+
+    //Servo Delcare pin 4
     servo.attach(4);
     
     //Gyro Setup
@@ -98,8 +104,9 @@ void loop(){
   Encoder_2.setMotorPwm(motorSpeed - calculatedPID);
   Encoder_1.updateSpeed(); //update speed 
   Encoder_2.updateSpeed();
-  checkTemp();
+  displayText(calculatedPID , gyroValue);
   checkWall();
-  displayText(calculatedPID , gyroValue);;
+  checkTemp();
 
+     
 }

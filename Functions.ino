@@ -1,6 +1,6 @@
 /**
 * Author: Marcus 
-* Date: 5/01/2020
+* Date: 8/01/2020
 * Aim: Functions for a range of different components
 **/
 
@@ -10,8 +10,14 @@
 #include "MeAuriga.h"
 #include <millisDelay.h>
 millisDelay Delay;
+millisDelay alignmentDelay;
 
-//defines variables for ultrasonic Sensor
+/**
+ * ########################################################################
+ * #                       ULTRASONIC DELCARE                             #
+ * ########################################################################
+**/
+//defines variables
 //defines Port 6
 int port6Trig=64;
 int port6Echo=69;
@@ -33,15 +39,23 @@ int port10Echo=65;
 int distanceBottomRight;
 long durationBottomRight;
 
+/**
+ * ########################################################################
+ * #                       DELAY DELCARE                                  #
+ * ########################################################################
+**/
 //Delay for moveDirection Function
 bool startMoveDelay = true;
 bool moveDelayOn = true;
 
-//Declare bool for alignment
-bool frontAlign = false;
-bool sideAlign = false;
+bool startAlignDelay = true;
+bool alignDelayOn = true;
 
-
+/**
+ * ########################################################################
+ * #                       ULTRASONIC FUNCTIONS                           #
+ * ########################################################################
+**/
 int getUltrasonicBottomLeft(){ //Functions that returns the distance of Ultrasonics in CM for all 4 sides
     pinMode(port8Trig,OUTPUT);
     pinMode(port8Echo,INPUT);
@@ -95,6 +109,12 @@ int getUltrasonicBottomRight(){
 }
 
 
+/**
+ * ########################################################################
+ * #                       DISPLAY FUNCTION                               #
+ * ########################################################################
+**/
+
 void displayText(int topText, int bottomText){ // function which has topText for the display and the bottomText.
   lcd.print("PID: ");
   lcd.print(topText); //display topText
@@ -105,11 +125,17 @@ void displayText(int topText, int bottomText){ // function which has topText for
   lcd.home();
 }
 
+/**
+ * ########################################################################
+ * #                       PID FUNCTION                                   #
+ * ########################################################################
+**/
+
 //PID Declare
 int targetValue = 0; //the length away from the wall
 int speedValue = 100; // speed of the motors
 
-int threshold = 2; // min distance
+int threshold = 1; // min target
 int error = 0;
 int lastError = 0;
 int proportional = 0;
@@ -119,15 +145,15 @@ int derivative = 0;
 int pidValue = 0;
 
 
-int kP = 4; // PID variables
+int kP = 6; // PID variables
 float kI = 0.01;
-float kD = 0.3;
+float kD = 0.4;
 
 
 
-/**function for cqlculating PID value and changing motor speed
+/**function for calculating PID value and changing motor speed
  *calculatePIDValue(int target)
- *target |  Value target
+ *target | ultrasonic Value
   */
 
 int calculatePIDValue(int target){
@@ -151,26 +177,20 @@ int calculatePIDValue(int target){
     
 }
 
-
-
-
-bool limitSwitch(){ // function that returns true if left and/or right are active, else its returns false
-  if(digitalRead(3) == HIGH or digitalRead(2) == HIGH){
-    return true;
-  }else{
-    return false;
-  }
-}
-
+/**
+ * ########################################################################
+ * #                       CHECKWALL FUNCTION                             #
+ * ########################################################################
+**/
 void checkWall(){
   if(limitSwitch()){
-    //go back
+    delayOn();
+    moveDirection(100, -100, 0.2);
   }
   else if (frontUltraSensor.distanceCm() <= 7){  // // checks if front distance is <= 7 then stop motors
         Encoder_1.setMotorPwm(0);
         Encoder_2.setMotorPwm(0);
-        frontAlignment();
-        
+        frontAlignment(); //align the front of the robot
         if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
           turnAbsolute(90, true, 150);
         }else if (getUltrasonicTopLeft() >= 8){
@@ -179,15 +199,16 @@ void checkWall(){
         else if (getUltrasonicTopRight() <= 7 and getUltrasonicTopLeft() <= 7){
          turnAbsolute(90, true, 150);
         }
-         frontAlign = false;
    }
   
 }
 
 
-
-
-//getAbsolute function declare
+/**
+ * ########################################################################
+ * #                       TURNABSOLUTE FUNCTION                          #
+ * ########################################################################
+**/
 int turnSpeed; // power at which to turn
 int absolute; //getAbsolute() vlaue from Gyro
 int target; //set target degress to int
@@ -220,6 +241,12 @@ void turnAbsolute(int target, bool resetGyro, int turnSpeed){
 
 }
 
+/**
+ * ########################################################################
+ * #                       LIMITSWITCH FUNCTIONS                          #
+ * ########################################################################
+**/
+
 //limitSwitch function for left and right
 bool leftLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
   if(digitalRead(2) == HIGH){
@@ -235,10 +262,21 @@ bool rightLimitSwitch(){ // function that returns true if left and/or right are 
     return false;
   }
 }
+bool limitSwitch(){ // function that returns true if left and/or right are active, else its returns false
+  if(digitalRead(3) == HIGH or digitalRead(2) == HIGH){
+    return true;
+  }else{
+    return false;
+  }
+}
 
 
 
-   
+/**
+ * ########################################################################
+ * #                       TEMPERATURE DECLARE                            #
+ * ########################################################################
+**/
 
 // the amount of degress above ambient for the target temp
 int targetTempAdd = 5;
@@ -259,6 +297,12 @@ float getRightTempAmbient(){
   mlx.AddrSet(rightTemp); 
   return mlx.readAmbientTempC();
 }
+
+/**
+ * ########################################################################
+ * #                       RESCUEKIT AND LED FUNCTION                     #
+ * ########################################################################
+**/
 
 int dropRescueKit(){  // delcaring function for droping rescue kit
  servo.write(180);  // Pull back to drop rescue kit
@@ -281,6 +325,11 @@ for (uint8_t t = 0; t < LEDNUM; t++ ){
 }
 
 
+/**
+ * ########################################################################
+ * #                       CHECKTEMP FUNCTION                             #
+ * ########################################################################
+**/
 void checkTemp(){
   int leftTempTarget = getLeftTempAmbient() + targetTempAdd;
   int rightTempTarget = getRightTempAmbient() + targetTempAdd;
@@ -293,8 +342,8 @@ void checkTemp(){
     turnAbsolute(-90, true, 150);
    // turnOfRGBLED();
     //FIX AFTER!: command below will move the robot foward but needs a checkPosition Function added.
-    delayOn();
-    moveDirection(-100, 100, 2);
+    //delayOn();
+    //moveDirection(-100, 100, 1);
     //--------------------------
     
   }
@@ -302,18 +351,24 @@ void checkTemp(){
      Encoder_1.setMotorPwm(0);
      Encoder_2.setMotorPwm(0);
     turnAbsolute(-90, true, 150);
-   // showRGBLED();
+  // showRGBLED(); 
     dropRescueKit();
     turnAbsolute(90, true, 150);
-   // -turnOfRGBLED();
+  // turnOfRGBLED();
     //FIX AFTER!: command below will move the robot foward but needs a checkPosition Function added.
-    delayOn();
-    moveDirection(-100, 100, 2);
+    //delayOn();
+    //moveDirection(-100, 100, 1);
     //---------------------------
   }
   
 }
 
+
+/**
+ * ########################################################################
+ * #                       MOVEDIRECTION FUNCTION                             #
+ * ########################################################################
+**/
 
 /**function for going any direction
  *moveDirection(motor1Speed, motor2Speed, runTime) 
@@ -326,13 +381,11 @@ void moveDirection(int motor1Speed, int motor2Speed, float runTime){
    if (startMoveDelay == true){
       Delay.start(runTime * 1000);
       startMoveDelay = false;
-      Serial.println("delay start");
     }
     if(Delay.justFinished()){
        moveDelayOn = false;
        Encoder_1.setMotorPwm(0);
        Encoder_2.setMotorPwm(0);
-       Serial.println("off");
     }else{
      Encoder_1.setMotorPwm(motor1Speed);
      Encoder_2.setMotorPwm(motor2Speed);
@@ -341,7 +394,13 @@ void moveDirection(int motor1Speed, int motor2Speed, float runTime){
 }
 
 
-//Delay Functions to reset
+/**
+ * ########################################################################
+ * #                       DELAY FUNCTIONS                                #
+ * ########################################################################
+**/
+
+//move Delay Functions to reset
 void delayOn(){
   moveDelayOn = true;
   startMoveDelay = true;
@@ -351,32 +410,106 @@ void delayOff(){
   startMoveDelay = false;
 }
 
+//align delay function reset
+void delayOnAlign(){
+  alignDelayOn = true;
+  startAlignDelay = true;
+}
 
+/**
+ * ########################################################################
+ * #                       ALIGNMENT FUNCTIONS                            #
+ * ########################################################################
+**/
 //front alignmnet function
 void frontAlignment(){
-  if (frontAlign == false){
-    if(frontUltraSensor.distanceCm() <= 6){
         while (!leftLimitSwitch() or !rightLimitSwitch()){
            Encoder_1.setMotorPwm(-100);
           Encoder_2.setMotorPwm(100);
           if(leftLimitSwitch()){
-             Encoder_1.setMotorPwm(100);
-          Encoder_2.setMotorPwm(100);
+             Encoder_1.setMotorPwm(150);
+          Encoder_2.setMotorPwm(150);
           }
           if(rightLimitSwitch()){
-             Encoder_1.setMotorPwm(-100);
-          Encoder_2.setMotorPwm(-100);
+             Encoder_1.setMotorPwm(-150);
+          Encoder_2.setMotorPwm(-150);
           }
         }
         if(rightLimitSwitch() and leftLimitSwitch()) {
          Encoder_1.setMotorPwm(0);
           Encoder_2.setMotorPwm(0);
-          moveDirection(100, -100, 0.35);
+          delayOn();
+          moveDirection(100, -100, 0.45);
           delay(100);
           gyro.update();
-          delayOn();
-          frontAlign = true;
+          delayOnAlign();
+          sideAlignment();
         }
+}
+
+void leftAlignment(){
+  /** fix after, need adjustment when stuck.
+   *  if(getUltrasonicTopLeft() <= 4 and getUltrasonicBottomLeft() <= 4){
+    delayOn();
+    moveDirection(150, 0, 1);
+    delayOn();
+    moveDirection(0, 150, 0.5);
+    delayOn();
+    moveDirection(-100, -100, 1);
+    
+}
+**/
+ if (getUltrasonicTopLeft() > getUltrasonicBottomLeft()){
+  //turn left
+  delayOn();
+  moveDirection(-100, -100, 0.01);
+}if (getUltrasonicTopLeft() < getUltrasonicBottomLeft()){
+  //turn right
+  delayOn();
+  moveDirection(100, 100, 0.01);
+}
+}
+void rightAlignment(){
+   /** fix after, need adjustment when stuck.
+   if(getUltrasonicTopRight() <= 4 and getUltrasonicBottomRight() <= 4){
+     delayOn();
+    moveDirection(-150, 0, 1);
+    delayOn();
+    moveDirection(0, -150, 0.5);
+     delayOn();
+   moveDirection(100, 100, 1);
+}
+**/
+if (getUltrasonicTopLeft() > getUltrasonicBottomLeft()){
+  //turn left
+ delayOn();
+  moveDirection(100, 100, 0.01);
+}if (getUltrasonicTopRight() < getUltrasonicBottomRight()){
+  //turn right
+ delayOn();
+  moveDirection(-100, -100, 0.01);
+}
+}
+
+void sideAlignment(){
+  while (alignDelayOn == true){
+   if (startAlignDelay == true){
+      alignmentDelay.start(600);
+      startAlignDelay = false;
+    }
+    if(alignmentDelay.justFinished()){
+       alignDelayOn = false;
+       Encoder_1.setMotorPwm(0);
+       Encoder_2.setMotorPwm(0);
+       delay(100);
+       break;
+    }else{
+     if(getUltrasonicTopRight() <=6){
+    rightAlignment();
+  }
+  if(getUltrasonicTopLeft() <=6){
+    leftAlignment();
       }
+    }
   }
 }
