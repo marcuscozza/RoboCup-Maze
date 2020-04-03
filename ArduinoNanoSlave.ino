@@ -1,80 +1,189 @@
-/*
+/* SLAVE
 * Author: Marcus 
-* Date: 2/04/2020
-* Aim:  To send variables to the arduino Mega, it will send the value of the top right IR sensor 
+* Date: 3/04/2020
+* Aim:  To send IR sensor and colour sensor valuesto the arduino Mega. 
+* Value 1 = Top Right IR Sensor
+* Value 2 = Top Left IR Sensor
+* Value 3 = Bottom Right IR Sensor
+* Value 4 = Bottom Left IR Sensor
+* Value 5 = Red colour value
+* Value 6 = Green colour value
+* Value 7 = Blue colour value
+* Connecting I2C devices: https://www.youtube.com/watch?v=yBgikWNoU9o
 */
 
 #include <Wire.h>
 
-// Define Slave I2c Address
+// Assign I2C address
 #define SLAVE_ADDR 9
 
-// Define Slave answer size
-#define ANSWERSIZE 5
 
-//Declare Ir sensor to A3
-int pinNum = 3;
+// Declare pins for colour sensor
+#define COLOUROUT A3
+#define COLOURS2 A2
+#define COLOURS3 A1
 
-//Define Answer as a string
-String answer;
+// Decalre pins for IR sensors
+int topRightPin = 3;
+int topLeftPin = 4;
+int bottomRightPin = 5;
+int bottomLeftPin = 6;
 
-void setup() {
-  //make A3 an input
-   pinMode(pinNum, INPUT);
-
-  // Initialise I2C communications as Slave
-  Wire.begin(SLAVE_ADDR);
-
-  // Function to run when data requested from master
-  Wire.onRequest(requestEvent);
-
-  // Function to run when data received from master
-  Wire.onReceive(receiveEvent);
-
-  
-  Serial.begin(9600);
-  Serial.println("I2C Slave");
+// bool Functions for IR sensors
+bool getTopRightIRValue(){
+  if (digitalRead(topRightPin) == HIGH){
+  return false;
+ }else{
+  return true;
+ }
 }
-
-void receiveEvent() {
-  // Read while data is received
-  while (0 < Wire.available()){
-    byte x = Wire.read();
-  }
-  Serial.println("Receive Event");
+bool getTopLeftIRValue(){
+  if (digitalRead(topLeftPin) == HIGH){
+  return false;
+ }else{
+  return true;
+ }
 }
-
-void requestEvent() {
-  // Setup byte variable in the correct size 
-  byte response[ANSWERSIZE];
-
-  // Format answer as an array
-  for (byte i=0;i<ANSWERSIZE;i++){
-    response[i] = (byte)answer.charAt(i);
-  }
-
-  // Send response back to Master
-  Wire.write(response,sizeof(response));
-
-  Serial.println("Request Event");
+bool getBottomRightIRValue(){
+  if (digitalRead(bottomRightPin) == HIGH){
+  return false;
+ }else{
+  return true;
+ }
 }
-
-// Ir sensor bool function, if closer then 5cm it will return true.
-bool irSensor(){
-  if (digitalRead(pinNum) == HIGH){
+bool getBottomLeftIRValue(){
+  if (digitalRead(bottomLeftPin) == HIGH){
   return false;
  }else{
   return true;
  }
 }
 
-//Check if the answer IR sensor is less then 5cm if so it will change the answer to yes
-void loop() {
-  if (irSensor()){
-    answer = "yyyyy";
-  }else{
-    answer = "nnnnn";
+// Colour sensor intensity function
+int getintensity(){ //measure intensity with oversampling
+ int a=0;
+ int b=255;
+ for(int i=0;i<10;i++){a=a+pulseIn(COLOUROUT,LOW);}
+ if(a>9){b=2550/a;}
+ return b;
+}
+
+// Functions for each colour
+void colourred(){ //select red
+ digitalWrite(COLOURS2,LOW);
+ digitalWrite(COLOURS3,LOW);
+}
+void colourblue(){ //select blue
+ digitalWrite(COLOURS2,LOW);
+ digitalWrite(COLOURS3,HIGH);
+}
+void colourwhite(){ //select white
+ digitalWrite(COLOURS2,HIGH);
+ digitalWrite(COLOURS3,LOW);
+}
+void colourgreen(){ //select green
+ digitalWrite(COLOURS2,HIGH);
+ digitalWrite(COLOURS3,HIGH);
+}
+
+// Assign value to an array of 7
+int value[7];
+
+// Declare bcount as a counter
+int bcount = 0;
+void setup() {
+  Wire.begin(SLAVE_ADDR);
+  Wire.onRequest(requestEvent);
+  
+  Serial.begin(9600);
+  pinMode(topRightPin, INPUT); 
+  pinMode(topLeftPin, INPUT);
+  pinMode(bottomRightPin, INPUT);
+  pinMode(bottomLeftPin, INPUT);
+
+  pinMode(COLOUROUT,INPUT);
+  pinMode(COLOURS2,OUTPUT);
+  pinMode(COLOURS3,OUTPUT);
+}
+
+void requestEvent(){
+  byte bval;
+
+  switch (bcount){
+    case 0:
+      bval = 255;
+      break;
+    case 1:
+      bval = value[0];
+      break;
+    case 2:
+      bval = value[1];
+      break;
+    case 3:
+      bval = value[2];
+      break;
+    case 4:
+      bval = value[3];
+      break;
+    case 5:
+      bval = value[4];
+      break;
+    case 6:
+      bval = value[5];
+      break;
+    case 7:
+      bval = value[6];
+      break;
   }
-  delay(150);
- 
+
+  Wire.write(bval);
+
+  bcount = bcount + 1;
+  if (bcount > 7) bcount = 0;
+}
+
+void readValue(){
+  if (getTopRightIRValue()){
+    value[0] = 1;
+  }else{
+    value[0] = 0;
+  }
+  delay(10);
+   if (getTopLeftIRValue()){
+    value[1] = 1;
+  }else{
+    value[1] = 0;
+  }
+  delay(10);
+   if (getBottomRightIRValue()){
+    value[2] = 1;
+  }else{
+    value[2] = 0;
+  }
+  delay(10);
+   if (getBottomLeftIRValue()){
+    value[3] = 1;
+  }else{
+    value[3] = 0;
+  }
+  delay(10);
+  if (getBottomLeftIRValue()){
+    value[3] = 1;
+  }else{
+    value[3] = 0;
+  }
+  colourred();
+  value[4] = getintensity();
+  delay(10);
+  colourgreen();
+  value[5] = getintensity();
+  delay(10);
+  colourblue();
+  value[6] = getintensity();
+  delay(10);
+}
+
+void loop() {
+  readValue();
+  delay(500);
 }

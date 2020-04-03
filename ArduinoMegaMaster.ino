@@ -1,48 +1,53 @@
-/*
+/* MASTER
 * Author: Marcus 
-* Date: 2/04/2020
-* Aim:  To recieve variables from the arduino nano.
-* 
+* Date: 3/04/2020
+* Aim:  To recieve IR sensor and RGB values from the arduino nano.
+* Value 1 = Top Right IR Sensor
+* Value 2 = Top Left IR Sensor
+* Value 3 = Bottom Right IR Sensor
+* Value 4 = Bottom Left IR Sensor
+* Value 5 = Red colour value
+* Value 6 = Green colour value
+* Value 7 = Blue colour value
+* Connecting I2C devices: https://www.youtube.com/watch?v=yBgikWNoU9o
  */
 
 #include <Wire.h>
 
-// Define Master I2c Address
 #define SLAVE_ADDR 9
 
-// Define Slave answer size
-#define ANSWERSIZE 5
+byte value[7];
+
+int bcount;
 void setup() {
-
-  // Initialise I2C communications as master
   Wire.begin();
-
   Serial.begin(9600);
-  Serial.println("I2C Master");
+}
+
+byte readI2C(int address){
+  byte bval;
+  long entry = millis();
+
+  Wire.requestFrom(address, 1);
+
+  while (Wire.available() == 0 && (millis() - entry) < 100) Serial.print("Waiting");
+
+  if (millis() - entry < 100) bval = Wire.read();
+  return bval;
 }
 
 void loop() {
-  delay(150);
-  Serial.println("Write Data to slave");
-
-  // Write a charatcer to the Slave
-  Wire.beginTransmission(SLAVE_ADDR);
-  Wire.write(0);
-  Wire.endTransmission();
-
-  Serial.println("Receive Data");
-
-  // Read response from Slave
-  Wire.requestFrom(SLAVE_ADDR, ANSWERSIZE);
-
-  // Add characters to string 
-  String response = "";
-  while (Wire.available()){
-    char b = Wire.read();
-    response += b;
+  while (readI2C(SLAVE_ADDR) < 255){
+    Serial.print("Waiting");
   }
-  if (response == "yyyyy"){
-    Serial.println("Active");
+  for (bcount = 0; bcount < 7; bcount++){
+    value[bcount] = readI2C(SLAVE_ADDR);
   }
-  
+  for (int i = 0; i < 7; i++){
+    Serial.print(value[i]);
+    Serial.print("\t");
+  }
+  Serial.println();
+  delay(200);
+
 }
