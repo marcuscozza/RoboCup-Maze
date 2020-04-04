@@ -1,6 +1,6 @@
 /**
 * Author: Marcus 
-* Date: 8/01/2020
+* Date: 4/04/2020
 * Aim: Functions for a range of different components
 **/
 
@@ -41,7 +41,7 @@ long durationBottomRight;
 
 /**
  * ########################################################################
- * #                       DELAY DELCARE                                  #
+ * #                       DELAY DEClARE                                  #
  * ########################################################################
 **/
 //Delay for moveDirection Function
@@ -192,12 +192,12 @@ void checkWall(){
         Encoder_2.setMotorPwm(0);
         frontAlignment(); //align the front of the robot
         if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
-          turnAbsolute(90, true, 150);
+          turnAbsolute(90, true, 100);
         }else if (getUltrasonicTopLeft() >= 8){
-          turnAbsolute(-90, true, 150);
+          turnAbsolute(-90, true, 100);
         }
         else if (getUltrasonicTopRight() <= 7 and getUltrasonicTopLeft() <= 7){
-         turnAbsolute(90, true, 150);
+         turnAbsolute(90, true, 100);
         }
    }
   
@@ -213,6 +213,7 @@ int turnSpeed; // power at which to turn
 int absolute; //getAbsolute() vlaue from Gyro
 int target; //set target degress to int
 bool resetGyro; // set resetGyro to bool
+
 
 void turnAbsolute(int target, bool resetGyro, int turnSpeed){ 
   gyro.update(); //Set gyro active
@@ -247,16 +248,31 @@ void turnAbsolute(int target, bool resetGyro, int turnSpeed){
  * ########################################################################
 **/
 
-//limitSwitch function for left and right
-bool leftLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
+//limitSwitch function for Top left and right
+bool topLeftLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
   if(digitalRead(2) == HIGH){
     return true;
   }else{
     return false;
   }
 }
-bool rightLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
+bool topRightLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
   if(digitalRead(3) == HIGH){
+    return true;
+  }else{
+    return false;
+  }
+}
+//limitSwitch function for bottom left and right
+bool bottomLeftLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
+  if(digitalRead(6) == HIGH){
+    return true;
+  }else{
+    return false;
+  }
+}
+bool bottomRightLimitSwitch(){ // function that returns true if left and/or right are active, else its returns false
+  if(digitalRead(7) == HIGH){
     return true;
   }else{
     return false;
@@ -336,11 +352,11 @@ void checkTemp(){
   if(leftTempTarget <= getLeftTemp()){
      Encoder_1.setMotorPwm(0);
      Encoder_2.setMotorPwm(0);
-    turnAbsolute(90, true, 150);
-   // showRGBLED();
+    turnAbsolute(90, true, 100);
+    showRGBLED();
     dropRescueKit();
-    turnAbsolute(-90, true, 150);
-   // turnOfRGBLED();
+    turnAbsolute(-90, true, 100);
+    turnOfRGBLED();
     //FIX AFTER!: command below will move the robot foward but needs a checkPosition Function added.
     //delayOn();
     //moveDirection(-100, 100, 1);
@@ -350,11 +366,11 @@ void checkTemp(){
   if(rightTempTarget <= getRightTemp()){
      Encoder_1.setMotorPwm(0);
      Encoder_2.setMotorPwm(0);
-    turnAbsolute(-90, true, 150);
-  // showRGBLED(); 
+    turnAbsolute(-90, true, 100);
+    showRGBLED(); 
     dropRescueKit();
-    turnAbsolute(90, true, 150);
-  // turnOfRGBLED();
+    turnAbsolute(90, true, 100);
+    turnOfRGBLED();
     //FIX AFTER!: command below will move the robot foward but needs a checkPosition Function added.
     //delayOn();
     //moveDirection(-100, 100, 1);
@@ -423,23 +439,23 @@ void delayOnAlign(){
 **/
 //front alignmnet function
 void frontAlignment(){
-        while (!leftLimitSwitch() or !rightLimitSwitch()){
+        while (!topLeftLimitSwitch() or !topRightLimitSwitch()){
            Encoder_1.setMotorPwm(-100);
           Encoder_2.setMotorPwm(100);
-          if(leftLimitSwitch()){
-             Encoder_1.setMotorPwm(150);
-          Encoder_2.setMotorPwm(150);
+          if(topLeftLimitSwitch()){
+             Encoder_1.setMotorPwm(130);
+          Encoder_2.setMotorPwm(130);
           }
-          if(rightLimitSwitch()){
-             Encoder_1.setMotorPwm(-150);
-          Encoder_2.setMotorPwm(-150);
+          if(topRightLimitSwitch()){
+             Encoder_1.setMotorPwm(-130);
+          Encoder_2.setMotorPwm(-130);
           }
         }
-        if(rightLimitSwitch() and leftLimitSwitch()) {
+        if(topRightLimitSwitch() and topLeftLimitSwitch()) {
          Encoder_1.setMotorPwm(0);
           Encoder_2.setMotorPwm(0);
           delayOn();
-          moveDirection(100, -100, 0.45);
+          moveDirection(100, -100, 0.20);
           delay(100);
           gyro.update();
           delayOnAlign();
@@ -512,4 +528,37 @@ void sideAlignment(){
       }
     }
   }
+}
+
+/**
+ * ########################################################################
+ * #                       I2C FUNCTION For Arduino Nano                  #
+ * ########################################################################
+**/
+
+byte readI2C(int address){
+  byte bval;
+  long entry = millis();
+
+  Wire.requestFrom(address, 1);
+
+  while (Wire.available() == 0 && (millis() - entry) < 100) Serial.print("Waiting");
+
+  if (millis() - entry < 100) bval = Wire.read();
+  return bval;
+}
+
+void getValues(){
+  while (readI2C(SLAVE_ADDR) < 255){
+    Serial.print("Waiting");
+  }
+  for (bcount = 0; bcount < 7; bcount++){
+    value[bcount] = readI2C(SLAVE_ADDR);
+  }
+  for (int i = 0; i < 7; i++){
+    Serial.print(value[i]);
+    Serial.print("\t");
+  }
+  Serial.println();
+  //delay(200);
 }

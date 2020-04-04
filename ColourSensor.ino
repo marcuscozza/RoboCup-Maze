@@ -4,9 +4,9 @@
 * Aim: Measure the intensity of colours 
 */
 
-#define COLOUROUT A5
-#define COLOURS2 A4
-#define COLOURS3 A3
+#define COLOUROUT A3
+#define COLOURS2 A2
+#define COLOURS3 A1
 void setup() {
  Serial.begin(115200);
  pinMode(COLOUROUT,INPUT);

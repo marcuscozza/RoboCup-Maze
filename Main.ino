@@ -1,6 +1,6 @@
 /*
 * Author: Marcus 
-* Date: 29/03/2020
+* Date: 4/04/2020
 * Aim: Main Program which is using PID gyro to navigate. includes rescuekit and alignment
 * NEEDS Functions in order to compile
  */
@@ -22,6 +22,11 @@ MeRGBLed led( 0, LEDNUM );
 
 //Servo Declare
 Servo servo;
+
+// Arduino Nano Decalre
+#define SLAVE_ADDR 9
+byte value[7];
+int bcount;
 
 
 //Encoder Motor Delcare
@@ -107,6 +112,5 @@ void loop(){
   displayText(calculatedPID , gyroValue);
   checkWall();
   checkTemp();
-
-     
+  getValues();    
 }
