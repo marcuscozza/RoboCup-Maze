@@ -1,6 +1,6 @@
 /**
 * Author: Marcus 
-* Date: 4/04/2020
+* Date: 13/11/2020
 * Aim: Functions for a range of different components
 **/
 
@@ -185,7 +185,7 @@ int calculatePIDValue(int target){
 void checkWall(){
   if(limitSwitch()){
     delayOn();
-    moveDirection(100, -100, 0.2);
+    moveDirection(100, -100, 0.1);
   }
   else if (frontUltraSensor.distanceCm() <= 7){  // // checks if front distance is <= 7 then stop motors
         Encoder_1.setMotorPwm(0);
@@ -357,11 +357,11 @@ void checkTemp(){
     dropRescueKit();
     turnAbsolute(-90, true, 100);
     turnOfRGBLED();
-    //FIX AFTER!: command below will move the robot foward but needs a checkPosition Function added.
-    //delayOn();
-    //moveDirection(-100, 100, 1);
-    //--------------------------
-    
+    delay(100);
+    delayOnAlign();
+    sideAlignment();
+    delay(200);
+    checkWallAfterLeft();
   }
   if(rightTempTarget <= getRightTemp()){
      Encoder_1.setMotorPwm(0);
@@ -371,12 +371,33 @@ void checkTemp(){
     dropRescueKit();
     turnAbsolute(90, true, 100);
     turnOfRGBLED();
-    //FIX AFTER!: command below will move the robot foward but needs a checkPosition Function added.
-    //delayOn();
-    //moveDirection(-100, 100, 1);
-    //---------------------------
+    delay(100);
+    delayOnAlign();
+    sideAlignment();
+    delay(200);
+     checkWallAfterRight();
   }
   
+}
+
+//Check Wall 
+void checkWallAfterLeft(){
+   if (frontUltraSensor.distanceCm() <= 7){
+      turnAbsolute(90, true, 100);
+    }
+    else {
+      delayOn();
+    moveDirection(-100, 100, 0.5);
+    }
+}
+void checkWallAfterRight(){
+   if (frontUltraSensor.distanceCm() <= 7){
+      turnAbsolute(-90, true, 100);
+    }
+    else {
+      delayOn();
+    moveDirection(-100, 100, 0.5);
+    }
 }
 
 
@@ -461,7 +482,38 @@ void frontAlignment(){
           delayOnAlign();
           sideAlignment();
         }
+
+/*
+ if (value[1] == 0 or value[0] == 0){
+           Encoder_1.setMotorPwm(-50);
+          Encoder_2.setMotorPwm(50);
+          if (value[2] == 1){
+             Encoder_1.setMotorPwm(70);
+          Encoder_2.setMotorPwm(70);
+          }
+          if (value[1] == 1){
+             Encoder_1.setMotorPwm(-70);
+          Encoder_2.setMotorPwm(-70);
+          }
+   }
+  else if(value[1] == 1 and value[2] == 1) {
+       Encoder_1.setMotorPwm(0);
+          Encoder_2.setMotorPwm(0);
+          delayOn();
+          moveDirection(-100, 100, 0.10);
+          delay(1000);
+          gyro.update();
+          delayOnAlign();
+          sideAlignment();
+        
+    }
+   */
+
 }
+
+
+
+
 
 void leftAlignment(){
   /** fix after, need adjustment when stuck.
@@ -478,11 +530,11 @@ void leftAlignment(){
  if (getUltrasonicTopLeft() > getUltrasonicBottomLeft()){
   //turn left
   delayOn();
-  moveDirection(-100, -100, 0.01);
+  moveDirection(-100, -100, 0.02);
 }if (getUltrasonicTopLeft() < getUltrasonicBottomLeft()){
   //turn right
   delayOn();
-  moveDirection(100, 100, 0.01);
+  moveDirection(100, 100, 0.02);
 }
 }
 void rightAlignment(){
@@ -499,11 +551,11 @@ void rightAlignment(){
 if (getUltrasonicTopLeft() > getUltrasonicBottomLeft()){
   //turn left
  delayOn();
-  moveDirection(100, 100, 0.01);
+  moveDirection(100, 100, 0.02);
 }if (getUltrasonicTopRight() < getUltrasonicBottomRight()){
   //turn right
  delayOn();
-  moveDirection(-100, -100, 0.01);
+  moveDirection(-100, -100, 0.02);
 }
 }
 
@@ -536,6 +588,7 @@ void sideAlignment(){
  * ########################################################################
 **/
 
+
 byte readI2C(int address){
   byte bval;
   long entry = millis();
@@ -560,5 +613,22 @@ void getValues(){
     Serial.print("\t");
   }
   Serial.println();
+  if (value[5] <= 10 and value[6] <= 10 and value[7] <= 10){
+    Encoder_1.setMotorPwm(0);
+    Encoder_2.setMotorPwm(0);
+    delay(300);
+    
+    delayOn();
+    moveDirection(100, -100, 0.7);
+    delay(100);
+    if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
+          turnAbsolute(90, true, 100);
+        }else if (getUltrasonicTopLeft() >= 8){
+          turnAbsolute(-90, true, 100);
+        }
+        else if (getUltrasonicTopRight() <= 7 and getUltrasonicTopLeft() <= 7){
+         turnAbsolute(90, true, 100);
+        }
+  }
   //delay(200);
 }

@@ -1,6 +1,6 @@
 /*
 * Author: Marcus 
-* Date: 4/04/2020
+* Date: 13/11/2020
 * Aim: Main Program which is using PID gyro to navigate. includes rescuekit and alignment
 * NEEDS Functions in order to compile
  */
@@ -109,8 +109,8 @@ void loop(){
   Encoder_2.setMotorPwm(motorSpeed - calculatedPID);
   Encoder_1.updateSpeed(); //update speed 
   Encoder_2.updateSpeed();
-  displayText(calculatedPID , gyroValue);
+  //displayText(calculatedPID , gyroValue); 
   checkWall();
-  checkTemp();
-  getValues();    
+  checkTemp();  
+   getValues();
 }
