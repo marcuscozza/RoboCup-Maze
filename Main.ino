@@ -1,6 +1,6 @@
 /*
 * Author: Marcus 
-* Date: 13/11/2020
+* Date: 4/04/2020
 * Aim: Main Program which is using PID gyro to navigate. includes rescuekit and alignment
 * NEEDS Functions in order to compile
  */
@@ -102,6 +102,7 @@ void setup(){
     delay(500);
 }
 void loop(){
+
   gyro.update(); //Set gyro active
   gyroValue = gyro.getAngleZ(); // set absolute to angle z
   calculatedPID = calculatePIDValue(gyroValue);
@@ -110,7 +111,8 @@ void loop(){
   Encoder_1.updateSpeed(); //update speed 
   Encoder_2.updateSpeed();
   //displayText(calculatedPID , gyroValue); 
+  getValues();
   checkWall();
   checkTemp();  
-   getValues();
+  Ramp();
 }

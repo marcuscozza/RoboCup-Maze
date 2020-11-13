@@ -1,6 +1,6 @@
 /**
 * Author: Marcus 
-* Date: 13/11/2020
+* Date: 4/04/2020
 * Aim: Functions for a range of different components
 **/
 
@@ -184,21 +184,65 @@ int calculatePIDValue(int target){
 **/
 void checkWall(){
   if(limitSwitch()){
+    Encoder_1.setMotorPwm(0);
+        Encoder_2.setMotorPwm(0);
+        delay(200);
     delayOn();
     moveDirection(100, -100, 0.1);
+    delayOnAlign();
+    sideAlignment();
+  }
+  else if (topLeftLimitSwitch()){
+    Encoder_1.setMotorPwm(0);
+        Encoder_2.setMotorPwm(0);
+        delay(200);
+     delayOn();
+    moveDirection(-100, -100, 0.3);
+     delayOnAlign();
+    sideAlignment();
+  }
+  else if (topRightLimitSwitch()){
+    Encoder_1.setMotorPwm(0);
+        Encoder_2.setMotorPwm(0);
+        delay(200);
+    delayOn();
+    moveDirection(100, 100, 0.3);
+     delayOnAlign();
+    sideAlignment();
   }
   else if (frontUltraSensor.distanceCm() <= 7){  // // checks if front distance is <= 7 then stop motors
         Encoder_1.setMotorPwm(0);
         Encoder_2.setMotorPwm(0);
+        delay(1000);
         frontAlignment(); //align the front of the robot
         if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
           turnAbsolute(90, true, 100);
+          delayOnAlign();
+          backAlignment();
         }else if (getUltrasonicTopLeft() >= 8){
           turnAbsolute(-90, true, 100);
+          delayOnAlign();
+          backAlignment();
         }
-        else if (getUltrasonicTopRight() <= 7 and getUltrasonicTopLeft() <= 7){
+        else if (getUltrasonicTopRight() <= 8 and getUltrasonicTopLeft() <= 8){
          turnAbsolute(90, true, 100);
+         delay(100);
+         turnAbsolute(90, true, 100);
+         delayOnAlign();
+    backAlignment();
         }
+   }
+   else if (getUltrasonicTopRight() >= 15 and getUltrasonicTopLeft() >= 15 and getUltrasonicBottomRight() >= 15 and getUltrasonicBottomLeft() >= 15){
+    Encoder_1.setMotorPwm(0);
+     Encoder_2.setMotorPwm(0);
+      delayOn();
+    moveDirection(-100, 100, 0.2);
+    delay(200);
+    turnAbsolute(-90, true, 100);
+    delayOn();
+    moveDirection(-100, 100, 0.9);
+    delayOnAlign();
+    sideAlignment();
    }
   
 }
@@ -295,7 +339,7 @@ bool limitSwitch(){ // function that returns true if left and/or right are activ
 **/
 
 // the amount of degress above ambient for the target temp
-int targetTempAdd = 5;
+int targetTempAdd = 8;
 
 float getLeftTemp(){ // function that returns the object temp in C
   mlx.AddrSet(leftTemp); 
@@ -384,6 +428,7 @@ void checkTemp(){
 void checkWallAfterLeft(){
    if (frontUltraSensor.distanceCm() <= 7){
       turnAbsolute(90, true, 100);
+      delay(100);
     }
     else {
       delayOn();
@@ -393,6 +438,7 @@ void checkWallAfterLeft(){
 void checkWallAfterRight(){
    if (frontUltraSensor.distanceCm() <= 7){
       turnAbsolute(-90, true, 100);
+      delay(100);
     }
     else {
       delayOn();
@@ -458,27 +504,32 @@ void delayOnAlign(){
  * #                       ALIGNMENT FUNCTIONS                            #
  * ########################################################################
 **/
+//topRightLimitSwitch() and topLeftLimitSwitch()
 //front alignmnet function
 void frontAlignment(){
-        while (!topLeftLimitSwitch() or !topRightLimitSwitch()){
-           Encoder_1.setMotorPwm(-100);
-          Encoder_2.setMotorPwm(100);
-          if(topLeftLimitSwitch()){
-             Encoder_1.setMotorPwm(130);
-          Encoder_2.setMotorPwm(130);
-          }
-          if(topRightLimitSwitch()){
-             Encoder_1.setMotorPwm(-130);
-          Encoder_2.setMotorPwm(-130);
-          }
-        }
-        if(topRightLimitSwitch() and topLeftLimitSwitch()) {
-         Encoder_1.setMotorPwm(0);
-          Encoder_2.setMotorPwm(0);
+        if (value[0] == 0 or value[1] == 0){
           delayOn();
-          moveDirection(100, -100, 0.20);
+          moveDirection(-100, 100, 0.01);
+        }
+          else if(value[1] == 1){
+          //   delayOn();
+        //  moveDirection(100, 100, 0.05);
+          }
+          else if(value[0] == 1){
+          //   delayOn();
+          //  moveDirection(-100, -100, 0.05);
+          }
+        
+       else if(value[0] == 1 and value[1] == 1) {
+          Encoder_1.setMotorPwm(0);
+          Encoder_2.setMotorPwm(0);
+          delay(1000);
+         // delayOn();
+         // moveDirection(100, -100, 0.20);
           delay(100);
           gyro.update();
+          //delayOnAlign();
+          //frontAlignmentIR();
           delayOnAlign();
           sideAlignment();
         }
@@ -582,6 +633,77 @@ void sideAlignment(){
   }
 }
 
+
+
+
+
+void backAlignment(){
+  while (alignDelayOn == true){
+   if (startAlignDelay == true){
+      alignmentDelay.start(600);
+      startAlignDelay = false;
+    }
+    if(alignmentDelay.justFinished()){
+       alignDelayOn = false;
+       Encoder_1.setMotorPwm(0);
+       Encoder_2.setMotorPwm(0);
+       delay(100);
+       break;
+    }else{
+
+        if (!bottomLeftLimitSwitch() or !bottomRightLimitSwitch()){
+           Encoder_1.setMotorPwm(100);
+          Encoder_2.setMotorPwm(-100);
+          if(bottomLeftLimitSwitch()){
+             Encoder_1.setMotorPwm(130);
+          Encoder_2.setMotorPwm(130);
+          }
+          if(bottomRightLimitSwitch()){
+             Encoder_1.setMotorPwm(-130);
+          Encoder_2.setMotorPwm(-130);
+          }
+        }
+        if(bottomRightLimitSwitch() and bottomLeftLimitSwitch()) {
+          Encoder_1.setMotorPwm(0);
+          Encoder_2.setMotorPwm(0);
+          delayOn();
+          moveDirection(-100, 100, 0.20);
+          delay(100);
+          gyro.update();
+          //delayOnAlign();
+          //frontAlignmentIR();
+          delayOnAlign();
+          sideAlignment();
+        }
+    }
+  }
+/*
+        while (value[3] == 0 or value[4] == 0){
+           Encoder_1.setMotorPwm(100);
+          Encoder_2.setMotorPwm(-100);
+          if(value[4] == 1){
+             Encoder_1.setMotorPwm(130);
+          Encoder_2.setMotorPwm(130);
+          }
+          if(value[3] == 1){
+             Encoder_1.setMotorPwm(-130);
+          Encoder_2.setMotorPwm(-130);
+          }
+        }
+        if(value[3] == 1 and value[4] == 1) {
+          Encoder_1.setMotorPwm(0);
+          Encoder_2.setMotorPwm(0);
+          //delayOn();
+          //moveDirection(-100, 100, 0.20);
+          delay(100);
+          gyro.update();
+          //delayOnAlign();
+          //frontAlignmentIR();
+          delayOnAlign();
+          sideAlignment();
+        }
+        */
+}
 /**
  * ########################################################################
  * #                       I2C FUNCTION For Arduino Nano                  #
@@ -602,6 +724,9 @@ byte readI2C(int address){
 }
 
 void getValues(){
+  float RGBRatio = 0.00;
+  float RGBTotal = 0.00;
+
   while (readI2C(SLAVE_ADDR) < 255){
     Serial.print("Waiting");
   }
@@ -613,22 +738,184 @@ void getValues(){
     Serial.print("\t");
   }
   Serial.println();
-  if (value[5] <= 10 and value[6] <= 10 and value[7] <= 10){
+  for (int k = 4; k< 7; k++){
+      RGBTotal += value[k];
+    }
+  delay(100);
+  RGBRatio = (value[4] / RGBTotal);
+  Serial.println(RGBTotal);
+  Serial.println(RGBRatio);
+
+  //FIX BLACK
+  if (value[4] <= 5 and value[5] <= 5 and value[6] <=6){
     Encoder_1.setMotorPwm(0);
     Encoder_2.setMotorPwm(0);
     delay(300);
     
     delayOn();
-    moveDirection(100, -100, 0.7);
+    moveDirection(100, -100, 0.9);
     delay(100);
     if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
           turnAbsolute(90, true, 100);
+          delayOn();
+    moveDirection(-100, 100, 0.9);
+    delayOnAlign();
+    sideAlignment();
         }else if (getUltrasonicTopLeft() >= 8){
           turnAbsolute(-90, true, 100);
+          delayOn();
+    moveDirection(-100, 100, 0.9);
+    delayOnAlign();
+    sideAlignment();
         }
         else if (getUltrasonicTopRight() <= 7 and getUltrasonicTopLeft() <= 7){
          turnAbsolute(90, true, 100);
+         delayOnAlign();
+          backAlignment();
+          delayOnAlign();
+          sideAlignment();
         }
+        
   }
-  //delay(200);
+}
+
+
+/**
+ * ########################################################################
+ * #                       RAMP FUNCTION                                  #
+ * ########################################################################
+**/
+
+
+void Ramp(){
+  int GyroValue = 10;
+  gyro.update();
+  int GyroX = abs(gyro.getAngleX());
+  turnOfRGBLED();
+  while (GyroX >= GyroValue){
+    showRGBLED();
+    int desiredLength = 5; //the length away from the wall
+    int speedValue = 70; // speed of the motors
+    
+    int threshold = 4; // min distance
+    int error1 = 0;
+    int lastError1 = 0;
+    int integral1 = 0;
+    int derivative1 = 0;
+    
+    int pidValue1 = 0;
+    
+    int error2 = 0;
+    int lastError2 = 0;
+    int integral2 = 0;
+    int derivative2 = 0;
+    
+    int pidValue2 = 0;
+    
+    int error3 = 0;
+    int lastError3 = 0;
+    int integral3 = 0;
+    int derivative3 = 0;
+    
+    int pidValue3 = 0;
+    
+    int error4 = 0;
+    int lastError4= 0;
+    int integral4 = 0;
+    int derivative4 = 0;
+    
+    int pidValue4 = 0;
+    
+    float kP = 6; // PID variables
+    float kI = 0.1;
+    float kD = 0.55;
+
+    if (frontUltraSensor.distanceCm() <= 6){  // checks distance if less then (input), if so motors stop and program stop
+        break;
+   }
+   int distanceTRight = getUltrasonicTopRight();
+   error1 = distanceTRight - desiredLength;
+   int distanceBRight = getUltrasonicBottomRight();
+    error2 = distanceBRight - desiredLength;
+   if (abs(error1) < threshold){
+      integral1 = integral1 + error1;
+   }else{
+      integral1 = 0;
+      derivative1 = error1 - lastError1;
+      lastError1 = error1;
+      pidValue1 = error1*kP + integral1*kI + derivative1*kD;
+   if (pidValue1 > 100){ // checks if the pidValue is too high/low and sets it to a upper/lower limit
+      pidValue1 = 60;
+   }
+   else if (pidValue1 < -100){
+      pidValue1 = -60;
+    }
+    Encoder_1.setMotorPwm(-speedValue + pidValue1); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue + pidValue1);
+    Encoder_1.updateSpeed(); //update speed 
+    Encoder_2.updateSpeed();
+    }
+   if (abs(error2) < threshold){
+      integral2 = integral2 + error2;
+   }else{
+      integral2 = 0;
+      derivative2 = error2 - lastError2;
+      lastError2 = error2;
+      pidValue2 = error2*kP + integral2*kI + derivative2*kD;
+   if (pidValue2 > 100){ // checks if the pidValue is too high/low and sets it to a upper/lower limit
+      pidValue2 = 60;
+   }
+   else if (pidValue2 < -100){
+      pidValue2 = -60;
+    }
+    Encoder_1.setMotorPwm(-speedValue - pidValue2); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue - pidValue2);
+    Encoder_1.updateSpeed(); //update speed 
+    Encoder_2.updateSpeed();
+    }
+
+
+
+    int distanceTLeft = getUltrasonicTopLeft();
+   error3 = distanceTLeft - desiredLength;
+   int distanceBLeft = getUltrasonicBottomLeft();
+    error4 = distanceBLeft - desiredLength;
+   if (abs(error3) < threshold){
+      integral3 = integral3 + error3;
+   }else{
+      integral3 = 0;
+      derivative3 = error3 - lastError3;
+      lastError3 = error3;
+      pidValue3 = error3*kP + integral3*kI + derivative3*kD;
+   if (pidValue3 > 100){ // checks if the pidValue is too high/low and sets it to a upper/lower limit
+      pidValue3 = 60;
+   }
+   else if (pidValue3 < -100){
+      pidValue3 = -60;
+    }
+    Encoder_1.setMotorPwm(-speedValue + pidValue3); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue + pidValue3);
+    Encoder_1.updateSpeed(); //update speed 
+    Encoder_2.updateSpeed();
+    }
+   if (abs(error4) < threshold){
+      integral4 = integral4 + error4;
+   }else{
+      integral4 = 0;
+      derivative4 = error4 - lastError4;
+      lastError4 = error4;
+      pidValue4 = error4*kP + integral4*kI + derivative4*kD;
+   if (pidValue4 > 100){ // checks if the pidValue is too high/low and sets it to a upper/lower limit
+      pidValue4 = 60;
+   }
+   else if (pidValue4 < -100){
+      pidValue4 = -60;
+    }
+    Encoder_1.setMotorPwm(-speedValue - pidValue4); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue - pidValue4);
+    Encoder_1.updateSpeed(); //update speed 
+    Encoder_2.updateSpeed();
+    }
+  }
+  
 }
