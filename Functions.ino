@@ -1,6 +1,6 @@
 /**
 * Author: Marcus 
-* Date: 4/04/2020
+* Date: 14/11/2020
 * Aim: Functions for a range of different components
 **/
 
@@ -197,7 +197,7 @@ void checkWall(){
         Encoder_2.setMotorPwm(0);
         delay(200);
      delayOn();
-    moveDirection(-100, -100, 0.3);
+    moveDirection(-100, 100, 0.3);
      delayOnAlign();
     sideAlignment();
   }
@@ -206,7 +206,7 @@ void checkWall(){
         Encoder_2.setMotorPwm(0);
         delay(200);
     delayOn();
-    moveDirection(100, 100, 0.3);
+    moveDirection(-100, 100, 0.3);
      delayOnAlign();
     sideAlignment();
   }
@@ -216,18 +216,18 @@ void checkWall(){
         delay(1000);
         frontAlignment(); //align the front of the robot
         if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
-          turnAbsolute(90, true, 100);
+          turnAbsolute(90, true, 120);
           delayOnAlign();
           backAlignment();
         }else if (getUltrasonicTopLeft() >= 8){
-          turnAbsolute(-90, true, 100);
+          turnAbsolute(-90, true, 120);
           delayOnAlign();
           backAlignment();
         }
         else if (getUltrasonicTopRight() <= 8 and getUltrasonicTopLeft() <= 8){
-         turnAbsolute(90, true, 100);
+         turnAbsolute(90, true, 120);
          delay(100);
-         turnAbsolute(90, true, 100);
+         turnAbsolute(90, true, 120);
          delayOnAlign();
     backAlignment();
         }
@@ -238,7 +238,7 @@ void checkWall(){
       delayOn();
     moveDirection(-100, 100, 0.2);
     delay(200);
-    turnAbsolute(-90, true, 100);
+    turnAbsolute(-90, true, 120);
     delayOn();
     moveDirection(-100, 100, 0.9);
     delayOnAlign();
@@ -747,7 +747,7 @@ void getValues(){
   Serial.println(RGBRatio);
 
   //FIX BLACK
-  if (value[4] <= 5 and value[5] <= 5 and value[6] <=6){
+  if (value[4] <= 5 and value[5] <= 5 and value[6] <= 5 ){
     Encoder_1.setMotorPwm(0);
     Encoder_2.setMotorPwm(0);
     delay(300);
@@ -756,20 +756,20 @@ void getValues(){
     moveDirection(100, -100, 0.9);
     delay(100);
     if(getUltrasonicTopRight() >= 8){ // checks which way is clear and turns 
-          turnAbsolute(90, true, 100);
+          turnAbsolute(90, true, 120);
           delayOn();
     moveDirection(-100, 100, 0.9);
     delayOnAlign();
     sideAlignment();
         }else if (getUltrasonicTopLeft() >= 8){
-          turnAbsolute(-90, true, 100);
+          turnAbsolute(-90, true, 120);
           delayOn();
     moveDirection(-100, 100, 0.9);
     delayOnAlign();
     sideAlignment();
         }
         else if (getUltrasonicTopRight() <= 7 and getUltrasonicTopLeft() <= 7){
-         turnAbsolute(90, true, 100);
+         turnAbsolute(90, true, 120);
          delayOnAlign();
           backAlignment();
           delayOnAlign();
@@ -795,7 +795,7 @@ void Ramp(){
   while (GyroX >= GyroValue){
     showRGBLED();
     int desiredLength = 5; //the length away from the wall
-    int speedValue = 70; // speed of the motors
+    int speedValue1 = 70; // speed of the motors
     
     int threshold = 4; // min distance
     int error1 = 0;
@@ -830,7 +830,7 @@ void Ramp(){
     float kI = 0.1;
     float kD = 0.55;
 
-    if (frontUltraSensor.distanceCm() <= 6){  // checks distance if less then (input), if so motors stop and program stop
+    if (frontUltraSensor.distanceCm() <= 7){  // checks distance if less then (input), if so motors stop and program stop
         break;
    }
    int distanceTRight = getUltrasonicTopRight();
@@ -850,8 +850,8 @@ void Ramp(){
    else if (pidValue1 < -100){
       pidValue1 = -60;
     }
-    Encoder_1.setMotorPwm(-speedValue + pidValue1); //changes the speed of the motor
-    Encoder_2.setMotorPwm(speedValue + pidValue1);
+    Encoder_1.setMotorPwm(-speedValue1 + pidValue1); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue1 + pidValue1);
     Encoder_1.updateSpeed(); //update speed 
     Encoder_2.updateSpeed();
     }
@@ -868,8 +868,8 @@ void Ramp(){
    else if (pidValue2 < -100){
       pidValue2 = -60;
     }
-    Encoder_1.setMotorPwm(-speedValue - pidValue2); //changes the speed of the motor
-    Encoder_2.setMotorPwm(speedValue - pidValue2);
+    Encoder_1.setMotorPwm(-speedValue1 - pidValue2); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue1 - pidValue2);
     Encoder_1.updateSpeed(); //update speed 
     Encoder_2.updateSpeed();
     }
@@ -911,8 +911,8 @@ void Ramp(){
    else if (pidValue4 < -100){
       pidValue4 = -60;
     }
-    Encoder_1.setMotorPwm(-speedValue - pidValue4); //changes the speed of the motor
-    Encoder_2.setMotorPwm(speedValue - pidValue4);
+    Encoder_1.setMotorPwm(-speedValue1 - pidValue4); //changes the speed of the motor
+    Encoder_2.setMotorPwm(speedValue1 - pidValue4);
     Encoder_1.updateSpeed(); //update speed 
     Encoder_2.updateSpeed();
     }
